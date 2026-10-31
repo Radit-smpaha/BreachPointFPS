@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BREACHPOINT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,500;0,600;0,700;0,800;1,600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/style.css?v=2" />
+<script type="importmap">
+{ "imports": { "three": "./libs/three.module.js", "three/addons/": "./libs/" } }
+</script>
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<!-- cinematic overlays: always-on vignette, grain and scanline texture -->
+<div id="film">
+   <div class="grain"></div>
+</div>
+
+<!-- ============ BOOT ============ -->
+<section id="screen-boot" class="screen active">
+  <div class="boot-wrap">
+    <div class="boot-mark">
+      <span class="mark-line"></span>
+      <h1 class="wordmark">BREACH<span>POINT</span></h1>
+      <span class="mark-line"></span>
+    </div>
+    <p class="boot-sub">TACTICAL OPERATIONS SIMULATOR &nbsp;/&nbsp; BUILD 1.0.4</p>
+    <div class="boot-bar"><i></i></div>
+    <p class="boot-status">INITIALISING FIELD KIT…</p>
+    <button id="boot-enter" class="boot-enter">PRESS TO DEPLOY</button>
+  </div>
+</section>
+
+<!-- ============ MAIN MENU ============ -->
+<section id="screen-menu" class="screen">
+  <div class="menu-rail">
+    <div class="rail-top">
+      <div class="logo">
+        <svg viewBox="0 0 40 40" class="logo-glyph" aria-hidden="true">
+          <path d="M4 20 L20 4 L36 20 L20 36 Z" fill="none" stroke="currentColor" stroke-width="2.2"/>
+          <path d="M13 27 L13 13 L20 20 L27 13 L27 27" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>
+        </svg>
+        <div>
+          <h1 class="wordmark sm">BREACH<span>POINT</span></h1>
+          <p class="logo-tag">VERIFIED OPERATOR NETWORK</p>
+        </div>
+      </div>
+    </div>
+
+    <nav class="rail-nav" id="menu-nav">
+      <button class="nav-item" data-screen="play">
+        <span class="nav-idx">01</span><span class="nav-label">DEPLOY</span><span class="nav-hint">BEGIN OPERATION</span>
+      </button>
+      <button class="nav-item" data-screen="loadout">
+        <span class="nav-idx">02</span><span class="nav-label">ARMORY</span><span class="nav-hint">LOADOUT &amp; EQUIPMENT</span>
+      </button>
+      <button class="nav-item" data-screen="settings">
+        <span class="nav-idx">03</span><span class="nav-label">SETTINGS</span><span class="nav-hint">CALIBRATE SYSTEMS</span>
+      </button>
+      <button class="nav-item" data-screen="intel">
+        <span class="nav-idx">04</span><span class="nav-label">INTEL</span><span class="nav-hint">FIELD MANUAL</span>
+      </button>
+    </nav>
+
+    <div class="rail-bottom">
+      <div class="operator-card">
+        <div class="op-avatar"><span>R7</span></div>
+        <div class="op-meta">
+          <p class="op-name">OPERATOR <b>RADIT-07</b></p>
+          <div class="op-rank"><i style="width:64%"></i></div>
+          <p class="op-sub">RANK <b>LIEUTENANT</b> · LEVEL <b id="menu-level">14</b></p>
+        </div>
+      </div>
+      <div class="stat-strip">
+        <div><b id="stat-kills">0</b><span>KILLS</span></div>
+        <div><b id="stat-ops">0</b><span>OPS</span></div>
+        <div><b id="stat-best">—</b><span>BEST SCORE</span></div>
+      </div>
+      <p class="version">BREACHPOINT v1.0.4 · WEBGL2 · LOCAL BUILD</p>
+    </div>
+  </div>
+
+  <div class="menu-stage">
+    <div class="stage-tag"><i></i> LIVE FEED — TRAINING GROUND</div>
+    <div class="stage-corner tl"></div><div class="stage-corner tr"></div>
+    <div class="stage-corner bl"></div><div class="stage-corner br"></div>
+    <div class="stage-caption">
+      <p class="cap-kicker">CURRENT THEATRE</p>
+      <h2 id="cap-map">ABANDONED STEELWORKS</h2>
+      <p id="cap-map-sub">Night breach · Industrial district · 9 hostile signatures</p>
+    </div>
+    <div class="stage-dots">
+      <button class="stage-dot active" data-map="factory" aria-label="Preview steelworks"></button>
+      <button class="stage-dot" data-map="snow" aria-label="Preview snow theatre"></button>
+      <button class="stage-dot" data-map="desert" aria-label="Preview desert theatre"></button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PLAY / MAP SELECT (slides from right) ============ -->
+<section id="screen-play" class="screen drawer">
+  <div class="drawer-head">
+    <button class="back-btn" data-screen="menu">◀ BACK</button>
+    <h2 class="panel-title">DEPLOYMENT <em>SELECT</em></h2>
+    <p class="panel-sub">Choose a theatre and engagement profile.</p>
+  </div>
+  <div class="map-grid" id="map-grid">
+    <!-- filled by ui.js -->
+  </div>
+  <div class="deploy-foot">
+    <div class="deploy-meta">
+      <p class="lbl">ENGAGEMENT</p>
+      <div class="seg" id="seg-mode">
+        <button data-mode="breach" class="on">BREACH</button>
+        <button data-mode="survival">SIEGE</button>
+        <button data-mode="endless">ENDLESS</button>
+      </div>
+    </div>
+    <div class="deploy-meta">
+      <p class="lbl">THREAT LEVEL</p>
+      <div class="seg" id="seg-diff">
+        <button data-diff="recruit">RECRUIT</button>
+        <button data-diff="operator" class="on">OPERATOR</button>
+        <button data-diff="veteran">VETERAN</button>
+      </div>
+    </div>
+    <button id="btn-launch" class="cta">DEPLOY <span>▶</span></button>
+  </div>
+</section>
+
+<!-- ============ ARMORY (slides from right) ============ -->
+<section id="screen-loadout" class="screen drawer">
+  <div class="drawer-head">
+    <button class="back-btn" data-screen="menu">◀ BACK</button>
+    <h2 class="panel-title">FIELD <em>ARMORY</em></h2>
+    <p class="panel-sub">Primary, secondary and utility. Loadout carries into every operation.</p>
+  </div>
+  <div class="armory-wrap">
+    <div class="armory-preview"><canvas id="gun-canvas"></canvas><div class="preview-grid"></div><p class="preview-cap" id="gun-preview-cap">DRAG TO ROTATE</p></div>
+    <div class="armory-slots">
+      <p class="lbl">PRIMARY</p>
+      <div class="gun-grid" id="primaries"></div>
+      <p class="lbl">SECONDARY</p>
+      <div class="gun-grid small" id="secondaries"></div>
+    </div>
+    <aside class="armory-stats">
+      <p class="lbl">BALLISTICS</p>
+      <h3 id="gun-name">M4A1 CARBINE</h3>
+      <p id="gun-class" class="gun-class">ASSAULT RIFLE</p>
+      <div class="statbars" id="gun-stats"></div>
+      <div class="gun-attrs" id="gun-attrs"></div>
+    </aside>
+  </div>
+</section>
+
+<!-- ============ SETTINGS ============ -->
+<section id="screen-settings" class="screen drawer">
+  <div class="drawer-head">
+    <button class="back-btn" data-screen="menu">◀ BACK</button>
+    <h2 class="panel-title">SYSTEM <em>CALIBRATION</em></h2>
+    <p class="panel-sub">Changes apply instantly and persist locally.</p>
+  </div>
+  <div class="settings-grid" id="settings-grid"></div>
+</section>
+
+<!-- ============ INTEL ============ -->
+<section id="screen-intel" class="screen drawer">
+  <div class="drawer-head">
+    <button class="back-btn" data-screen="menu">◀ BACK</button>
+    <h2 class="panel-title">FIELD <em>MANUAL</em></h2>
+    <p class="panel-sub">Read before you breach. Enemy AI adapts — so should you.</p>
+  </div>
+  <div class="intel-grid">
+    <div class="intel-key"><p class="lbl">CONTROLS</p>
+      <ul class="keylist">
+        <li><kbd>W A S D</kbd><span>Move</span></li>
+        <li><kbd>SHIFT</kbd><span>Sprint</span></li>
+        <li><kbd>CTRL</kbd><span>Crouch / slide</span></li>
+        <li><kbd>SPACE</kbd><span>Jump / vault</span></li>
+        <li><kbd>MOUSE 1</kbd><span>Fire</span></li>
+        <li><kbd>MOUSE 2</kbd><span>Aim down sights</span></li>
+        <li><kbd data-action="reload">R</kbd><span>Reload</span><span class="rebind">[click to rebind]</span></li>
+        <li><kbd data-action="weapon1">1</kbd><span>Primary</span><span class="rebind">[click to rebind]</span></li>
+        <li><kbd data-action="weapon2">2</kbd><span>Secondary</span><span class="rebind">[click to rebind]</span></li>
+        <li><kbd>3 / 4 / 5</kbd><span>Select utility slot · Mouse 1 to throw</span></li>
+        <li><kbd data-action="melee">V</kbd><span>Melee</span><span class="rebind">[click to rebind]</span></li>
+        <li><kbd data-action="defuse">F</kbd><span>Defuse bomb</span><span class="rebind">[click to rebind]</span></li>
+        <li><kbd data-action="leanLeft">Q</kbd><span>Lean left</span><span class="rebind">[click to rebind]</span></li>
+        <li><kbd data-action="leanRight">E</kbd><span>Lean right</span><span class="rebind">[click to rebind]</span></li>
+        <li><kbd data-action="shop">B</kbd><span>Open / close shop</span><span class="rebind">[click to rebind]</span></li>
+        <li><kbd>ESC</kbd><span>Pause</span></li>
+      </ul>
+      <p class="lbl" style="margin-top:18px">KEYBINDS</p>
+      <p style="font-size:12px;color:var(--bone-faint)">Click any <kbd></kbd> with <span class="rebind">[click to rebind]</span> to change it. Press a key to bind, or Esc to cancel.</p>
+    </div>
+    <div class="intel-doc">
+      <p class="lbl">OPERATION BRIEF</p>
+      <h3>OBJECTIVE — BREACH</h3>
+      <p>Survive three waves of hostile operators to unlock C4 defusal. When a charge is armed, move within range and press <kbd>F</kbd> to defuse it — hold your position until the countdown finishes. Between waves, press <kbd>B</kbd> to buy weapons, armor and utility. Hostiles <b>reinforce, flank and suppress</b> — watch your compass and reload behind cover.</p>
+      <h3>ENEMY BEHAVIOUR</h3>
+      <ul class="doclist">
+        <li><b>Squad pathwaying</b> — squads split into fire and flank elements, and share sighting information.</li>
+        <li><b>Cover search</b> — enemies path to cover that blocks your line of sight, not just the closest box.</li>
+        <li><b>Suppression</b> — sustained fire pins them; they blind-fire and call for support rather than peeking.</li>
+        <li><b>Leaning &amp; peeking</b> — they lean from cover to shoot, then tuck back to reload.</li>
+        <li><b>Utility</b> — wounded or blocked enemies throw fragmentation and smoke grenades.</li>
+        <li><b>Last seen memory</b> — they investigate your last known position, clear corners and hold angles.</li>
+      </ul>
+      <h3>FIELD TIPS</h3>
+      <p>Reload behind cover — the enemy pushes the moment they see an empty mag. Headshots drop most hostiles instantly. Slide (<kbd>Shift</kbd>+<kbd>Ctrl</kbd>) to break their aim.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SHOP ============ -->
+<section id="screen-shop" class="screen drawer">
+  <div class="drawer-head">
+    <button class="back-btn" data-screen="menu">◀ BACK</button>
+    <h2 class="panel-title">FIELD <em>SHOP</em></h2>
+    <p class="panel-sub">Spend mission cash on weapons and sidearms.</p>
+  </div>
+  <div class="shop-wrap">
+    <div class="shop-meta">
+      <p class="lbl">MISSION CASH</p>
+      <p id="shop-cash" class="cash-val">$0</p>
+    </div>
+    <div class="shop-grid" id="shop-grid"></div>
+  </div>
+</section>
+
+<!-- ============ HUD ============ -->
+<section id="hud" class="hidden">
+  <div class="hitmarker" id="hitmarker"><i></i><i></i><i></i><i></i></div>
+  <div id="dmg-arrows"></div>
+  <div class="vignette-hurt" id="hurt"></div>
+
+  <div class="hud-top">
+    <div class="objective">
+      <p class="lbl">OBJECTIVE</p>
+      <p id="obj-text">DESTROY RELAY ALPHA</p>
+      <div class="obj-prog"><i id="obj-prog"></i></div>
+      <p class="obj-sub" id="obj-sub">HOLD E AT NODE · 0 / 2 SECURED</p>
+    </div>
+    <div class="compass">
+      <div class="compass-band" id="compass-band"></div>
+      <div class="compass-needle"></div>
+      <div class="compass-pings" id="compass-pings"></div>
+    </div>
+    <div class="mission-clock">
+      <p class="lbl">MISSION TIME</p>
+      <p id="clock">00:00</p>
+      <p class="lbl small" id="hostiles">HOSTILES 9</p>
+      <p class="lbl small" id="wave-countdown" style="display:none">NEXT WAVE IN <span id="wc-num">10</span>s</p>
+    </div>
+  </div>
+
+  <div class="killfeed" id="killfeed"></div>
+
+  <div class="crosshair" id="crosshair">
+    <i class="ch-t"></i><i class="ch-b"></i><i class="ch-l"></i><i class="ch-r"></i>
+    <span class="ch-dot"></span>
+    <span class="hit-marker-tick t"></span><span class="hit-marker-tick b"></span>
+  </div>
+
+  <div class="hud-bottom">
+    <div class="health-block">
+      <div class="hp-ring">
+        <svg viewBox="0 0 100 100"><circle class="track" cx="50" cy="50" r="42"/><circle id="hp-arc" class="fill" cx="50" cy="50" r="42"/></svg>
+        <b id="hp-num">100</b>
+        <span class="hp-lbl">HP</span>
+      </div>
+      <div class="hp-bars"><i id="armor-bar"></i></div>
+    </div>
+
+    <div class="ability-row">
+      <div class="ability" id="ab-grenade"><span class="ab-ico">✦</span><b id="grenade-count">2</b><small>FRAG</small></div>
+      <div class="ability" id="ab-melee"><span class="ab-ico">⚔</span><b>F</b><small>MELEE</small></div>
+    </div>
+
+    <div class="weapon-block" id="weapon-block">
+      <div class="weapon-meta">
+        <p id="weapon-name">M4A1 CARBINE</p>
+        <p class="weapon-mode" id="weapon-mode">AUTO · 5.56×45</p>
+      </div>
+      <div class="ammo-row">
+        <span class="ammo-mag" id="ammo-mag">30</span>
+        <span class="ammo-sep">/</span>
+        <span class="ammo-res" id="ammo-res">150</span>
+      </div>
+      <div class="weapon-slots" id="weapon-slots"><i class="on">1</i><i>2</i></div>
+      <div class="reload-track hidden" id="reload-track"><i></i></div>
+    </div>
+  </div>
+
+  <div class="notify-stack" id="notify"></div>
+  <div class="prompt hidden" id="prompt"><kbd>E</kbd> <span id="prompt-text">PLANT CHARGE</span></div>
+</section>
+
+<!-- ============ IN-GAME SHOP (deploy buy menu) ============ -->
+<div id="shop-game" class="shop-game hidden">
+  <div class="shop-game-card">
+    <p class="lbl">FIELD SHOP</p>
+    <b id="shop-game-cash">CASH $0</b>
+    <div class="shop-grid" id="shop-game-grid"></div>
+    <div class="shop-game-foot">
+      <button class="ghost-btn" id="btn-shop-game-close">CLOSE <kbd>B</kbd></button>
+      <p class="lbl small">B to open / close · buy weapons mid-operation</p>
+    </div>
+  </div>
+</div>
+<!-- ============ PAUSE ============ -->
+<section id="screen-pause" class="screen modal">
+  <div class="modal-card">
+    <p class="lbl">OPERATION SUSPENDED</p>
+    <h2 class="modal-title">PAUSED</h2>
+    <div class="modal-list">
+      <button class="mrow" id="btn-resume"><span>RESUME OPERATION</span><kbd>ESC</kbd></button>
+      <button class="mrow" id="btn-restart"><span>RESTART</span><kbd>R</kbd></button>
+      <button class="mrow" id="btn-pause-settings"><span>SETTINGS</span><kbd>O</kbd></button>
+      <button class="mrow danger" id="btn-abort"><span>ABORT TO MENU</span><kbd>Q</kbd></button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DEBRIEF ============ -->
+<section id="screen-debrief" class="screen modal">
+  <div class="modal-card wide">
+    <p class="lbl" id="debrief-kicker">OPERATION COMPLETE</p>
+    <h2 class="modal-title" id="debrief-title">NODE SECURED</h2>
+    <p class="debrief-sub" id="debrief-sub">All relay nodes destroyed. Theatre cleared.</p>
+    <div class="debrief-stats" id="debrief-stats"></div>
+    <div class="modal-row">
+      <button class="ghost-btn" id="btn-debrief-menu">RETURN TO HQ</button>
+      <button class="cta" id="btn-redeploy">REDEPLOY <span>▶</span></button>
+    </div>
+  </div>
+</section>
+
+<div id="loading" class="hidden"><div class="ld-inner"><div class="ld-bar"><i id="ld-fill"></i></div><p id="ld-text">LOADING THEATRE…</p></div></div>
+<div id="fps" class="fps">0 FPS</div>
+<div id="hit-flash"></div>
+
+<script type="module" src="js/main.js?v=2"></script>
+</body>
+</html>
