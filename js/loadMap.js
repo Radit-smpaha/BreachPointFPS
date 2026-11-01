@@ -6,7 +6,7 @@
 // reads exactly as it was authored. Static meshes that share a material are
 // baked into single draw calls; nearby lights are pooled into PointLights.
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/GLTFLoader.js';
+import { GLTFLoader } from '../libs/GLTFLoader.js?v=4';
 
 // Shared loading manager used by every GLTFLoader in the game so that asset
 // failures are reported instead of silently stranding the loading screen.
