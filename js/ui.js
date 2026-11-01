@@ -1,6 +1,6 @@
 // BREACHPOINT — interface controller: screens, menus, armory preview, HUD binding
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/GLTFLoader.js';
+import { GLTFLoader } from '../libs/GLTFLoader.js?v=4';
 import { WEAPONS, SHOP_ITEMS } from './weapons.js';
 import { MAPS, loadManager } from './level.js';
 
