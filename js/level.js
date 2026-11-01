@@ -4,7 +4,8 @@
 // collision boxes, a navigation grid, cover spots, objective nodes and spawns.
 import * as THREE from 'three';
 import { Colliders, NavGrid } from './world.js';
-import { loadMap, PRESETS } from './loadMap.js';
+import { loadMap, PRESETS, loadManager } from './loadMap.js';
+export { loadManager };
 import { rayBox } from './world.js';
 
 export const MAPS = {
@@ -42,9 +43,9 @@ export class Level {
   async load(id, { shadows = true, particles = true, onProgress } = {}) {
     this.unload();
     const def = MAPS[id];
-    const map = await loadMap(id, this.scene, this.renderer, this.camera, {
+      const map = await loadMap(id, this.scene, this.renderer, this.camera, {
       shadows, shadowSize: 2048, particles, mergeStatic: false, lightPool: 6,
-      basePath: './assets/maps/',
+      basePath: './assets/',
     });
     this.map = map; this.def = def;
     const root = map.root;

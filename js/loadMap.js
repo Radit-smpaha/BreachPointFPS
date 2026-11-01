@@ -8,6 +8,18 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/GLTFLoader.js';
 
+// Shared loading manager used by every GLTFLoader in the game so that asset
+// failures are reported instead of silently stranding the loading screen.
+export const loadManager = new THREE.LoadingManager();
+loadManager.onStart = (url) => console.log('[bp] load start:', url);
+loadManager.onLoad = (url) => console.log('[bp] load done:', url);
+loadManager.onProgress = (url, loaded, total) => {
+  if (total > 0) console.log(`[bp] progress ${Math.round((loaded / total) * 100)}%: ${url}`);
+};
+loadManager.onError = (url) => {
+  console.error('[bp] ASSET LOAD FAILED:', url);
+};
+
 export const FILES = { factory: 'abandoned_factory.glb', snow: 'snowy_lodge.glb', desert: 'desert_town.glb' };
 
 export const PRESETS = {
@@ -173,7 +185,7 @@ class LightPool {
 }
 
 export async function loadMap(name, scene, renderer, camera, {
-  shadows = true, basePath = './', lightPool = 4, lambert = true,
+  shadows = true, basePath = './assets/', lightPool = 4, lambert = true,
   shadowSize = 2048, particles = true, mergeStatic = true,
 } = {}) {
   const P = PRESETS[name];
@@ -216,7 +228,7 @@ export async function loadMap(name, scene, renderer, camera, {
   scene.environment = loadMap._envFor[name];
   scene.environmentIntensity = 0.5;
 
-  const gltf = await new GLTFLoader().loadAsync(basePath + FILES[name]);
+  const gltf = await new GLTFLoader(loadManager).loadAsync(basePath + FILES[name]);
   const root = gltf.scene, spawns = [], lightDefs = [];
   root.updateMatrixWorld(true);
   const toRemove = [];

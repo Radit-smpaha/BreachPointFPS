@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/GLTFLoader.js';
 import { WEAPONS, SHOP_ITEMS } from './weapons.js';
-import { MAPS } from './level.js';
+import { MAPS, loadManager } from './level.js';
 
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => [...document.querySelectorAll(s)];
@@ -130,7 +130,7 @@ export class UI {
     const grd = new THREE.Mesh(new THREE.PlaneGeometry(400, 400), new THREE.MeshBasicMaterial({ color: 0x08090a }));
     grd.rotation.x = -Math.PI / 2; grd.position.y = -0.5; scene.add(grd);
     try {
-      const gltf = await new GLTFLoader().loadAsync('./assets/maps/' + def.file);
+      const gltf = await new GLTFLoader(loadManager).loadAsync('./assets/' + def.file);
       const root = gltf.scene;
       // flatten to flat-shaded silhouettes for a "tactical model" look
       root.traverse(o => {
@@ -260,7 +260,7 @@ export class UI {
     if (gp.model) { gp.holder.remove(gp.model); gp.model = null; }
     const d = WEAPONS[id];
     try {
-      const gltf = await new GLTFLoader().loadAsync('./assets/weapons/' + d.file);
+      const gltf = await new GLTFLoader(loadManager).loadAsync('./assets/' + d.file);
       const obj = gltf.scene;
       const box = new THREE.Box3().setFromObject(obj);
       const size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
